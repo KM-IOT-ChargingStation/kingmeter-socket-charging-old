@@ -40,7 +40,7 @@ public class LoginStrategy implements RequestStrategy {
 
         log.info(new KingMeterMarker("Socket,Login,C001"),
                 "{}|{}|{}|{}", siteId,
-                loginParamsDto.getPwd(),"","");
+                loginParamsDto.getPwd(), "", "");
 
         SocketChannel channel = (SocketChannel) ctx.channel();
         TokenResult tokenResult = TokenUtils.getInstance().getRandomSiteToken(
@@ -66,7 +66,7 @@ public class LoginStrategy implements RequestStrategy {
                 "{}|{}|{}|{}|{}|{}|{}|{}|{}|{}", siteId,
                 responseDto.getSls(), responseDto.getPwd(),
                 responseDto.getUrl(), responseDto.getPot(),
-                0,0,"", responseDto.getTim(),
+                0, 0, 2113, responseDto.getTim(),
                 HardWareUtils.getInstance()
                         .getLocalTimeByHardWareTimeStamp(
                                 permission.getTimezone(),

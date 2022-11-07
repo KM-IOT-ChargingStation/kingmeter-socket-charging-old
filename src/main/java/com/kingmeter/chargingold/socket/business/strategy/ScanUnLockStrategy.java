@@ -34,7 +34,7 @@ public class ScanUnLockStrategy implements RequestStrategy {
         Map<String, String> siteMap = CacheUtil.getInstance().getDeviceInfoMap().get(siteId);
 
         log.info(new KingMeterMarker("Socket,ScanUnLock,C101"),
-                "{}|{}|{}|{}|{}|{}|{}",
+                "{}|{}|{}|{}|{}|{}|{}|0",
                 siteId,requestDto.getKid(),
                 requestDto.getBid(),requestDto.getUid(),requestDto.getGbs(),
                 requestDto.getTim(),

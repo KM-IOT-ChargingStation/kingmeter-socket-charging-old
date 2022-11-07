@@ -31,8 +31,7 @@ public class QueryDockInfoStrategy implements RequestStrategy {
         long siteId = requestDto.getSid();
 
         log.info(new KingMeterMarker("Socket,QueryDockInfo,C601"),
-                "{}|{}|{}|{}|{}|{}",siteId,
-                "","","","",
+                "{}|||||{}|0",siteId,
                 JSONObject.toJSONString(requestDto.getState()));
 
         chargingSiteService.dealWithQueryDockInfo(requestDto);

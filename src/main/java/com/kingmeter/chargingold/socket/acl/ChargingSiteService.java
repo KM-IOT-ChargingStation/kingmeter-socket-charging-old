@@ -166,12 +166,12 @@ public class ChargingSiteService {
                 0,
                 JSONObject.toJSONString(requestDto.getState()));
 
-        for (DockStateInfoFromHeartBeatVO vo : requestDto.getState()) {
-            log.info(new KingMeterMarker("Socket,HeartBeat,C303"),
-                    "{}|{}|{}|{}|{}", siteId,
-                    vo.getKid(),vo.getBid(),vo.getBsoc(),
-                    Float.valueOf(vo.getKmos())/10);
-        }
+//        for (DockStateInfoFromHeartBeatVO vo : requestDto.getState()) {
+//            log.info(new KingMeterMarker("Socket,HeartBeat,C303"),
+//                    "{}|{}|{}|{}|{}", siteId,
+//                    vo.getKid(),vo.getBid(),vo.getBsoc(),
+//                    Float.valueOf(vo.getKmos())/10);
+//        }
 
         Map<String, String> siteMap = CacheUtil.getInstance()
                 .getDeviceInfoMap()
