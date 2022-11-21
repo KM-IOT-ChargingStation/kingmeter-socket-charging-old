@@ -7,15 +7,10 @@ import com.kingmeter.chargingold.socket.business.code.ServerFunctionCodeType;
 import com.kingmeter.common.KingMeterException;
 import com.kingmeter.common.KingMeterMarker;
 import com.kingmeter.common.ResponseCode;
-import com.kingmeter.dto.charging.v1.rest.response.ScanUnlockResponseRestDto;
-import com.kingmeter.dto.charging.v1.socket.out.QueryDockLockStatusResponseDto;
+import com.kingmeter.dto.charging.v1.rest.request.ConfigureSiteInfoRequestRestDto;
+import com.kingmeter.dto.charging.v1.rest.response.*;
+import com.kingmeter.dto.charging.v1.socket.out.*;
 import com.kingmeter.dto.charging.v1.rest.request.ScanUnlockRequestRestDto;
-import com.kingmeter.dto.charging.v1.rest.response.ForceUnLockResponseRestDto;
-import com.kingmeter.dto.charging.v1.rest.response.QueryDockInfoResponseRestDto;
-import com.kingmeter.dto.charging.v1.rest.response.QueryDockLockStatusResponseRestDto;
-import com.kingmeter.dto.charging.v1.socket.out.ForceUnLockResponseDto;
-import com.kingmeter.dto.charging.v1.socket.out.QueryDockInfoResponseDto;
-import com.kingmeter.dto.charging.v1.socket.out.ScanUnlockResponseDto;
 import com.kingmeter.socket.framework.application.SocketApplication;
 import com.kingmeter.socket.framework.util.CacheUtil;
 import com.kingmeter.utils.HardWareUtils;
@@ -74,14 +69,14 @@ public class ChargingSocketApplication {
      * @param dockId
      * @return
      */
-    public ForceUnLockResponseRestDto foreUnlock(long siteId, long dockId) {
+    public ForceUnLockResponseRestDto foreUnlock(long siteId, long dockId,String userId) {
         ForceUnLockResponseDto responseDto =
                 new ForceUnLockResponseDto(
-                        dockId);
+                        dockId,userId);
         log.info(new KingMeterMarker("Socket,ForceUnLock,C104"),
                 "{}|{}|{}|{}",
                 siteId, dockId,
-                0, 0);
+                userId, 0);
 
         String key = "force_" + dockId;
         CacheUtil.getInstance().getDeviceResultMap().remove(key);
@@ -146,6 +141,51 @@ public class ChargingSocketApplication {
     }
 
 
+    public QuerySiteInfoResponseRestDto querySiteInfo(long siteId){
+        QuerySiteInfoResponseDto querySiteInfoResponseDto = new QuerySiteInfoResponseDto(siteId);
+        socketApplication.sendSocketMsg(siteId,
+                ServerFunctionCodeType.QuerySiteInfo,
+                toJSON(querySiteInfoResponseDto).toString());
+        String key = "query_site_info_" + siteId;
+        Map<String, String> result = socketApplication.waitForMapResult(key);
+        return JSON.parseObject(result.get("siteInfo"), QuerySiteInfoResponseRestDto.class);
+    }
+
+    public ConfigureSiteInfoResponseRestDto configureSiteInfo(ConfigureSiteInfoRequestRestDto restDto){
+        long siteId = restDto.getSite_id();
+
+        ConfigureSiteInfoResponseDto responseDto
+                = new ConfigureSiteInfoResponseDto(siteId,restDto.getSite_password(),
+                restDto.getLogin_ip(),restDto.getLogin_port(),
+                restDto.getNet_wifiname(),restDto.getNet_wifipsd(),restDto.getCustomer_id());
+        socketApplication.sendSocketMsg(siteId,
+                ServerFunctionCodeType.ConfigureSiteInfo,
+                toJSON(responseDto).toString());
+        String key = "configure_site_info_" + siteId;
+        Map<String, String> result = socketApplication.waitForMapResult(key);
+        return JSON.parseObject(result.get("siteInfo"), ConfigureSiteInfoResponseRestDto.class);
+    }
+
+
+    public RestartSiteResponseRestDto restartSite(long siteId){
+        RestartSiteResponseDto responseDto
+                = new RestartSiteResponseDto(siteId);
+        socketApplication.sendSocketMsg(siteId,
+                ServerFunctionCodeType.RestartSite,
+                toJSON(responseDto).toString());
+
+//        try{
+//            Thread.sleep(1000);
+//        }catch (Exception e){
+//            e.printStackTrace();
+//        }
+//        CacheUtil.getInstance().getDeviceIdAndChannelMap().get(String.valueOf(siteId)).close();
+
+        return null;
+//        String key = "restart_site_reply_" + siteId;
+//        Map<String, String> result = socketApplication.waitForMapResult(key);
+//        return JSON.parseObject(result.get("siteInfo"), RestartSiteResponseRestDto.class);
+    }
 
     /**
      * 查询 硬件设备列表
@@ -164,6 +204,8 @@ public class ChargingSocketApplication {
     }
 
 
+
+
     private int getTimezone(long siteId) {
         Map<String, String> siteMap = CacheUtil.getInstance().getDeviceInfoMap().get(
                 siteId
@@ -172,5 +214,8 @@ public class ChargingSocketApplication {
 
         return Integer.parseInt(siteMap.get("timezone"));
     }
+
+
+
 
 }

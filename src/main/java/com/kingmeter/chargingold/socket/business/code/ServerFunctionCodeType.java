@@ -15,4 +15,8 @@ public interface ServerFunctionCodeType {
     byte[] CheckDockLockStatus = {(byte) 199, (byte) 2};//("C7 02"),//检测锁状态
     byte[] DockMalfunctionUpload = {(byte) 201, (byte) 2};//("C9 02"),//桩体故障上报
     byte[] QueryDockBikeInfo = {(byte) 204, (byte) 2};//("CC 02"),//桩体车辆信息同步
+
+    byte[] QuerySiteInfo = {(byte) 240, (byte) 1};//("f0 01"),//查询配置信息
+    byte[] ConfigureSiteInfo = {(byte) 241, (byte) 1};//("f1 01"),//配置站点信息
+    byte[] RestartSite = {(byte) 255, (byte) 1};//("ff 01"),//重启站点
 }

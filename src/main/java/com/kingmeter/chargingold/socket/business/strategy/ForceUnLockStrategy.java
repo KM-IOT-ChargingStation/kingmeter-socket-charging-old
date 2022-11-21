@@ -38,7 +38,7 @@ public class ForceUnLockStrategy implements RequestStrategy {
         log.info(new KingMeterMarker("Socket,ForceUnLock,C103"),
                 "{}|{}|{}|{}|{}|{}|{}",
                 siteId, requestDto.getKid(),
-                requestDto.getBid(), "", requestDto.getGbs(),
+                requestDto.getBid(), requestDto.getUid(), requestDto.getGbs(),
                 requestDto.getTim(),
                 HardWareUtils.getInstance()
                         .getLocalTimeByHardWareTimeStamp(

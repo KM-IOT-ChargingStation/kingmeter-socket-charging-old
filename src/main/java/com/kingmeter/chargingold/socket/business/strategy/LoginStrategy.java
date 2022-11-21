@@ -18,6 +18,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.socket.SocketChannel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 
@@ -27,6 +28,12 @@ public class LoginStrategy implements RequestStrategy {
 
     @Autowired
     private ChargingSiteService chargingSiteService;
+
+    @Value("${kingmeter.default.companyCode}")
+    private String defaultCompanyCode;
+
+    @Value("${kingmeter.default.timezone}")
+    private int defaultTimezone;
 
     @Override
     public void process(RequestBody requestBody, ResponseBody responseBody,
@@ -38,39 +45,68 @@ public class LoginStrategy implements RequestStrategy {
 
         long siteId = loginParamsDto.getSid();
 
-        log.info(new KingMeterMarker("Socket,Login,C001"),
-                "{}|{}|{}|{}", siteId,
-                loginParamsDto.getPwd(), "", "");
-
         SocketChannel channel = (SocketChannel) ctx.channel();
+
+        String oldToken = requestBody.getToken();
+        byte[] oldTokenArray = requestBody.getTokenArray();
+
         TokenResult tokenResult = TokenUtils.getInstance().getRandomSiteToken(
+                oldToken, oldTokenArray,
                 CacheUtil.getInstance().getTokenAndDeviceIdMap()
         );
 
-        LoginPermissionDto permission = chargingSiteService.getSiteLoginPermission(loginParamsDto,
-                tokenResult, channel);
-        if (permission == null) {
-            ctx.close();
-            return;
+        int timezone = defaultTimezone;
+        String companyCode = defaultCompanyCode;
+
+        LoginResponseDto responseDto = new LoginResponseDto(0, "", "", 0,
+                -1, -1,
+                HardWareUtils.getInstance()
+                        .getUtcTimeStampOnDevice(timezone));
+
+        if (!tokenResult.isReLogin()) {
+            log.info(new KingMeterMarker("Socket,Login,C001"),
+                    "{}|{}|{}|{}", siteId,
+                    loginParamsDto.getPwd(), "", "");
+            LoginPermissionDto permission = chargingSiteService.getSiteLoginPermission(loginParamsDto,
+                    tokenResult, channel);
+            if (permission == null) {
+                ctx.close();
+                return;
+            }
+            responseDto = permission.getResponseDto();
+            companyCode = permission.getCompanyCode();
+            timezone = permission.getTimezone();
+
+            log.info(new KingMeterMarker("Socket,Login,C002"),
+                    "{}|{}|{}|{}|{}|{}|{}|{}|{}|{}", siteId,
+                    responseDto.getSls(), responseDto.getPwd(),
+                    responseDto.getUrl(), responseDto.getPot(),
+                    0, 0, Integer.parseInt(companyCode), responseDto.getTim(),
+                    HardWareUtils.getInstance()
+                            .getLocalTimeByHardWareTimeStamp(
+                                    timezone,
+                                    responseDto.getTim()));
+        } else {
+            log.warn(new KingMeterMarker("Socket,Login,C001"),
+                    "{}|{}|{}|{}", siteId,
+                    loginParamsDto.getPwd(), "", "");
+
+            log.warn(new KingMeterMarker("Socket,Login,C002"),
+                    "{}|{}|{}|{}|{}|{}|{}|{}|{}|{}", siteId,
+                    responseDto.getSls(), responseDto.getPwd(),
+                    responseDto.getUrl(), responseDto.getPot(),
+                    0, 0, Integer.parseInt(companyCode), responseDto.getTim(),
+                    HardWareUtils.getInstance()
+                            .getLocalTimeByHardWareTimeStamp(
+                                    timezone,
+                                    responseDto.getTim()));
         }
-        LoginResponseDto responseDto = permission.getResponseDto();
 
         //包装传出data
         responseBody.setTokenArray(tokenResult.getTokenArray());
         responseBody.setFunctionCodeArray(ServerFunctionCodeType.LoginType);
         responseBody.setData(JSONObject.toJSON(responseDto).toString());
         ctx.writeAndFlush(responseBody);
-
-
-        log.info(new KingMeterMarker("Socket,Login,C002"),
-                "{}|{}|{}|{}|{}|{}|{}|{}|{}|{}", siteId,
-                responseDto.getSls(), responseDto.getPwd(),
-                responseDto.getUrl(), responseDto.getPot(),
-                0, 0, 2113, responseDto.getTim(),
-                HardWareUtils.getInstance()
-                        .getLocalTimeByHardWareTimeStamp(
-                                permission.getTimezone(),
-                                responseDto.getTim()));
     }
 
 }

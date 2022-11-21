@@ -3,6 +3,7 @@ package com.kingmeter.chargingold.socket.acl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.kingmeter.chargingold.socket.business.code.ServerFunctionCodeType;
 import com.kingmeter.common.KingMeterMarker;
 import com.kingmeter.dto.charging.v1.rest.response.ForceUnLockResponseRestDto;
 import com.kingmeter.dto.charging.v1.rest.response.QueryDockLockStatusResponseRestDto;
@@ -40,6 +41,35 @@ public class ChargingSiteService {
 
     @Value("${kingmeter.default.timezone}")
     private int defaultTimezone;
+
+
+    @Value("${current.env}")
+    private int env;
+
+    @Value("${prod.wifi_name}")
+    private String prod_wifi_name;
+
+    @Value("${prod.wifi_pwd}")
+    private String prod_wifi_pwd;
+
+    @Value("${prod.ip}")
+    private String prod_ip;
+
+    @Value("${prod.port}")
+    private int prod_port;
+
+    @Value("${local.wifi_name}")
+    private String local_wifi_name;
+
+    @Value("${local.wifi_pwd}")
+    private String local_wifi_pwd;
+
+    @Value("${local.ip}")
+    private String local_ip;
+
+    @Value("${local.port}")
+    private int local_port;
+
 
     @Autowired
     private BusinessService business;
@@ -130,6 +160,7 @@ public class ChargingSiteService {
                 JSON.toJSONString(new ForceUnLockResponseRestDto(siteId,
                         requestDto.getKid(), requestDto.getBid(),
                         requestDto.getGbs(),
+                        requestDto.getUid(),
                         HardWareUtils.getInstance()
                                 .getLocalTimeStampByHardWareUtcTimeStamp(
                                         Integer.parseInt(siteMap.get("timezone")),
@@ -197,7 +228,54 @@ public class ChargingSiteService {
         Map<String, String> siteMap = CacheUtil.getInstance().getDeviceInfoMap().get(siteId);
         siteMap.put("dockArray", JSON.toJSONString(state));
 
+        int count = Integer.parseInt(siteMap.getOrDefault("count", "0"));
+        siteMap.put("count", String.valueOf(++count));
         CacheUtil.getInstance().getDeviceInfoMap().put(siteId, siteMap);
+
+        if (count == 1) {
+            ConfigureSiteInfoResponseDto responseDto = null;
+            //这里修改站点ip端口
+            if (env == 0) {//prod
+                responseDto = new ConfigureSiteInfoResponseDto(siteId, "123456",
+                        local_ip, local_port,
+                        local_wifi_name, local_wifi_pwd, "2113");
+
+                log.info(new KingMeterMarker("Socket,ConfigureSiteInfo,F101"),
+                        "{}|{}|{}|{}|{}", siteId, local_ip, local_port, local_wifi_name,
+                        local_wifi_pwd);
+
+            } else if (env == 1) {//local
+                responseDto = new ConfigureSiteInfoResponseDto(siteId, "123456",
+                        prod_ip, prod_port,
+                        prod_wifi_name, prod_wifi_pwd, "2113");
+
+                log.info(new KingMeterMarker("Socket,ConfigureSiteInfo,F101"),
+                        "{}|{}|{}|{}|{}", siteId, prod_ip, prod_port, prod_wifi_name,
+                        prod_wifi_pwd);
+            }
+
+            if (responseDto != null) {
+                responseBody.setFunctionCodeArray(ServerFunctionCodeType.ConfigureSiteInfo);
+                responseBody.setData(JSONObject.toJSON(responseDto).toString());
+                ctx.writeAndFlush(responseBody);
+            }
+        } else if (count == 10) {
+            if (env == 1) {//local
+                siteMap.put("count", "0");
+                CacheUtil.getInstance().getDeviceInfoMap().put(siteId, siteMap);
+
+                log.info(new KingMeterMarker("Socket,RestartSite,FF01"),
+                        "{}", siteId);
+
+                //发送重启命令
+                RestartSiteResponseDto responseDto
+                        = new RestartSiteResponseDto(siteId);
+                responseBody.setFunctionCodeArray(ServerFunctionCodeType.RestartSite);
+                responseBody.setData(JSONObject.toJSON(responseDto).toString());
+                ctx.writeAndFlush(responseBody);
+            }
+        }
+
 
         if (requestBusiness) business.heartBeatNotify(requestDto);
     }

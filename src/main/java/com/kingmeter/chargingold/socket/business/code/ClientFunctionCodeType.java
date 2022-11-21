@@ -21,7 +21,11 @@ public enum ClientFunctionCodeType {
     SwingCardConfirm(0xc403,SwingCardConfirmStrategy.class),//刷卡开桩请求确认
     QueryDockInfo(0xc601, QueryDockInfoStrategy.class),//查询桩体信息
     CheckDockLockStatus(0xc701, CheckDockLockStatusStrategy.class),//检测锁状态
-    MalfunctionUpload(0xc901,MalfunctionUploadStrategy.class);//桩体故障上报
+    MalfunctionUpload(0xc901,MalfunctionUploadStrategy.class),//桩体故障上报
+
+    QuerySiteInfo(0xf002,QuerySiteInfoStrategy.class),//站点设置信息上报
+    ConfigureSiteInfo(0xf102,ConfigureSiteInfoRequestStrategy.class),//站点设置返回
+    RestartSite(0xff02,RestartSiteStrategy.class);//重启站点返回
 
     private int value;
     private Class className;
