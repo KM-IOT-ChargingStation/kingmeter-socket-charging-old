@@ -3,7 +3,7 @@ package com.kingmeter.chargingold.socket.business.strategy;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.kingmeter.common.KingMeterMarker;
-import com.kingmeter.dto.charging.v1.socket.in.QuerySiteInfoRequestDto;
+import com.kingmeter.dto.charging.v1.socket.in.ExchangeBootLoadRequestDto;
 import com.kingmeter.socket.framework.dto.RequestBody;
 import com.kingmeter.socket.framework.dto.ResponseBody;
 import com.kingmeter.socket.framework.strategy.RequestStrategy;
@@ -22,16 +22,16 @@ import java.util.Map;
  */
 @Slf4j
 @Component
-public class QuerySiteInfoStrategy implements RequestStrategy {
+public class ExchangeBootLoadStrategy implements RequestStrategy {
     @Override
     public void process(RequestBody requestBody, ResponseBody responseBody, ChannelHandlerContext ctx) {
-        QuerySiteInfoRequestDto requestDto =
+        ExchangeBootLoadRequestDto requestDto =
                 JSONObject.
-                        parseObject(requestBody.getData(), QuerySiteInfoRequestDto.class);
+                        parseObject(requestBody.getData(), ExchangeBootLoadRequestDto.class);
 
-        long siteId = requestDto.getSite_id();
+        long siteId = Long.parseLong(requestBody.getDeviceId());
 
-        log.info(new KingMeterMarker("Socket,QuerySiteInfo,F002"),
+        log.info(new KingMeterMarker("Socket,ExchangeBootLoad,1102"),
                 "{}|{}",siteId,
                 JSONObject.toJSONString(requestDto));
 
@@ -39,7 +39,8 @@ public class QuerySiteInfoStrategy implements RequestStrategy {
 //        result.put("siteInfo",
 //                JSON.toJSONString(requestDto));
 
-        String key = "query_site_info_" + siteId;
+        String key = "exchange_boot_load_reply_" + siteId;
+
 
         Promise<Object> promise = CacheUtil.getInstance().getPROMISES().remove(key);
         if (promise != null) {

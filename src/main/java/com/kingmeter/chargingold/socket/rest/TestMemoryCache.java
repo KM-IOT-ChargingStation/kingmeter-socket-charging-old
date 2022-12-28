@@ -5,6 +5,8 @@ import lombok.Data;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 
 @Data
@@ -28,4 +30,5 @@ public class TestMemoryCache {
 
     public volatile Map<Long, Boolean> unlockFlag = Collections.synchronizedMap(new HashMap());
     public volatile Map<Long, Boolean> checkLockFlag = Collections.synchronizedMap(new HashMap());
+    public volatile ConcurrentMap<Long, TestUnLockDto> testForceLockInfoMap = new ConcurrentHashMap<>();
 }

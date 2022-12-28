@@ -66,7 +66,7 @@ public class LoginStrategy implements RequestStrategy {
         if (!tokenResult.isReLogin()) {
             log.info(new KingMeterMarker("Socket,Login,C001"),
                     "{}|{}|{}|{}", siteId,
-                    loginParamsDto.getPwd(), "", "");
+                    loginParamsDto.getPwd(), "1", "");
             LoginPermissionDto permission = chargingSiteService.getSiteLoginPermission(loginParamsDto,
                     tokenResult, channel);
             if (permission == null) {
@@ -89,7 +89,7 @@ public class LoginStrategy implements RequestStrategy {
         } else {
             log.warn(new KingMeterMarker("Socket,Login,C001"),
                     "{}|{}|{}|{}", siteId,
-                    loginParamsDto.getPwd(), "", "");
+                    loginParamsDto.getPwd(), "0", "");
 
             log.warn(new KingMeterMarker("Socket,Login,C002"),
                     "{}|{}|{}|{}|{}|{}|{}|{}|{}|{}", siteId,

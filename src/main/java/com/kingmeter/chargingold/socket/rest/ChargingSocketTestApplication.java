@@ -4,11 +4,14 @@ package com.kingmeter.chargingold.socket.rest;
 import com.alibaba.fastjson.JSON;
 import com.kingmeter.chargingold.socket.business.code.ServerFunctionCodeType;
 import com.kingmeter.common.KingMeterMarker;
+import com.kingmeter.dto.charging.v1.rest.response.ForceUnLockResponseRestDto;
 import com.kingmeter.dto.charging.v2.socket.in.vo.DockStateInfoFromHeartBeatVO;
 import com.kingmeter.dto.charging.v2.socket.out.ForceUnLockResponseDto;
 import com.kingmeter.socket.framework.application.SocketApplication;
 import com.kingmeter.socket.framework.util.CacheUtil;
 import com.kingmeter.utils.HardWareUtils;
+import io.netty.channel.Channel;
+import io.netty.channel.socket.SocketChannel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,8 +35,8 @@ public class ChargingSocketTestApplication {
     }
 
 
-    public String batchUnlock(long siteId,int times,
-                              long perSite,long perDock) {
+    public String batchUnlock(long siteId, int times,
+                              long perSite, long perDock) {
 
         TestMemoryCache.getInstance().getUnlockFlag().put(siteId, true);
 
@@ -43,13 +46,13 @@ public class ChargingSocketTestApplication {
     }
 
 
-    public void stopCheckDockLock(long siteId){
+    public void stopCheckDockLock(long siteId) {
         TestMemoryCache.getInstance().getCheckLockFlag().remove(siteId);
     }
 
-    public String batchCheckDockLock(long siteId,int times,
-                                     long perSite,long perDock){
-        TestMemoryCache.getInstance().getCheckLockFlag().put(siteId,true);
+    public String batchCheckDockLock(long siteId, int times,
+                                     long perSite, long perDock) {
+        TestMemoryCache.getInstance().getCheckLockFlag().put(siteId, true);
 
         new Thread(new TestCheckDockLockPerTime(siteId, times, perSite, perDock)).start();
 
@@ -118,7 +121,7 @@ public class ChargingSocketTestApplication {
 
                 log.info(new KingMeterMarker("Socket,CheckDockLockStatus,C702"),
                         "{}|{}|{}",
-                        siteId, vo.getKid(),userId);
+                        siteId, vo.getKid(), userId);
 
                 try {
                     Thread.sleep(perDock);
@@ -132,7 +135,6 @@ public class ChargingSocketTestApplication {
             return false;
         }
     }
-
 
 
     class TestUnlockPerTime implements Runnable {
@@ -191,14 +193,24 @@ public class ChargingSocketTestApplication {
                         ForceUnLockResponseDto(vo.getKid(), userId,
                         HardWareUtils.getInstance().getUtcTimeStampOnDevice(timezone));
 
-                socketApplication.sendSocketMsg(siteId,
+                String key = "force_" + vo.getKid();
+
+                TestUnLockDto unLockDto = new TestUnLockDto();
+                unLockDto.setSiteId(siteId);
+                unLockDto.setDockId(vo.getKid());
+                unLockDto.setStartTimeStamp(System.currentTimeMillis());
+                TestMemoryCache.getInstance().getTestForceLockInfoMap().put(vo.getKid(),unLockDto);
+
+                SocketChannel channel = socketApplication.sendSocketMsg(siteId,
                         ServerFunctionCodeType.ForceUnLock,
                         toJSON(response).toString());
 
-                log.info(new KingMeterMarker("Socket,Force,C104"),
+                log.info(new KingMeterMarker("Socket,ForceUnLock,C104"),
                         "{}|{}|{}|{}",
                         siteId, vo.getKid(),
                         userId, response.getTim());
+
+                socketApplication.waitForPromiseResult(key, channel);
 
                 try {
                     Thread.sleep(perDock);

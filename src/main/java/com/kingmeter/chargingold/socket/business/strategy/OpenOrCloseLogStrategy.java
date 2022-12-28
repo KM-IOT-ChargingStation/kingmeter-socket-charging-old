@@ -3,7 +3,7 @@ package com.kingmeter.chargingold.socket.business.strategy;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.kingmeter.common.KingMeterMarker;
-import com.kingmeter.dto.charging.v1.socket.in.QuerySiteInfoRequestDto;
+import com.kingmeter.dto.charging.v1.socket.in.OpenOrCloseLogRequestDto;
 import com.kingmeter.socket.framework.dto.RequestBody;
 import com.kingmeter.socket.framework.dto.ResponseBody;
 import com.kingmeter.socket.framework.strategy.RequestStrategy;
@@ -22,24 +22,23 @@ import java.util.Map;
  */
 @Slf4j
 @Component
-public class QuerySiteInfoStrategy implements RequestStrategy {
+public class OpenOrCloseLogStrategy implements RequestStrategy {
     @Override
     public void process(RequestBody requestBody, ResponseBody responseBody, ChannelHandlerContext ctx) {
-        QuerySiteInfoRequestDto requestDto =
-                JSONObject.
-                        parseObject(requestBody.getData(), QuerySiteInfoRequestDto.class);
+        OpenOrCloseLogRequestDto requestDto = JSONObject.
+                parseObject(requestBody.getData(), OpenOrCloseLogRequestDto.class);
 
-        long siteId = requestDto.getSite_id();
+        long siteId = requestDto.getSid();
+        log.info(new KingMeterMarker("Socket,OpenOrCloseLog,D101"),
+                "{}|{}", siteId,
+                requestDto.getSls());
 
-        log.info(new KingMeterMarker("Socket,QuerySiteInfo,F002"),
-                "{}|{}",siteId,
-                JSONObject.toJSONString(requestDto));
 
 //        Map<String, String> result = new HashMap<>();
-//        result.put("siteInfo",
+//        result.put("result",
 //                JSON.toJSONString(requestDto));
 
-        String key = "query_site_info_" + siteId;
+        String key = "open_close_site_log_" + siteId;
 
         Promise<Object> promise = CacheUtil.getInstance().getPROMISES().remove(key);
         if (promise != null) {
@@ -47,5 +46,6 @@ public class QuerySiteInfoStrategy implements RequestStrategy {
         }
 
 //        CacheUtil.getInstance().getDeviceResultMap().put(key,result);
+
     }
 }

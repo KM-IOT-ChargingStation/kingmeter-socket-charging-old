@@ -19,4 +19,9 @@ public interface ServerFunctionCodeType {
     byte[] QuerySiteInfo = {(byte) 240, (byte) 1};//("f0 01"),//查询配置信息
     byte[] ConfigureSiteInfo = {(byte) 241, (byte) 1};//("f1 01"),//配置站点信息
     byte[] RestartSite = {(byte) 255, (byte) 1};//("ff 01"),//重启站点
+    byte[] QueryVersionOfComponents = {(byte) 16, (byte) 1};//("10 01"),//重启站点
+    byte[] ExchangeBootLoad = {(byte) 17, (byte) 1};//("11 01"),//boot load 模式切换
+    byte[] QueryLog = {(byte) 208, (byte) 2};//("D0 02"),//查询日志
+    byte[] OpenOrCloseLog = {(byte) 209, (byte) 2};//("D1 02"),//开启或关闭日志
+    byte[] ClearLog = {(byte) 210, (byte) 2};//("D2 02"),//清空日志
 }

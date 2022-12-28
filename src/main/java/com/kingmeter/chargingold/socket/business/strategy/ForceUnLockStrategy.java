@@ -2,6 +2,8 @@ package com.kingmeter.chargingold.socket.business.strategy;
 
 import com.alibaba.fastjson.JSONObject;
 import com.kingmeter.chargingold.socket.acl.ChargingSiteService;
+import com.kingmeter.chargingold.socket.rest.TestMemoryCache;
+import com.kingmeter.chargingold.socket.rest.TestUnLockDto;
 import com.kingmeter.common.KingMeterMarker;
 import com.kingmeter.dto.charging.v1.socket.in.ForceUnLockRequestDto;
 import com.kingmeter.socket.framework.dto.RequestBody;
@@ -35,15 +37,25 @@ public class ForceUnLockStrategy implements RequestStrategy {
 
         Map<String, String> siteMap = CacheUtil.getInstance().getDeviceInfoMap().get(siteId);
 
+        TestUnLockDto unLockDto = TestMemoryCache.getInstance().getTestForceLockInfoMap().get(
+                requestDto.getKid()
+        );
+        long currentTimeStamp = System.currentTimeMillis();
+        if(unLockDto == null){
+            unLockDto = new TestUnLockDto();
+            unLockDto.setStartTimeStamp(currentTimeStamp);
+        }
+
         log.info(new KingMeterMarker("Socket,ForceUnLock,C103"),
-                "{}|{}|{}|{}|{}|{}|{}",
+                "{}|{}|{}|{}|{}|{}|{}|{}",
                 siteId, requestDto.getKid(),
                 requestDto.getBid(), requestDto.getUid(), requestDto.getGbs(),
                 requestDto.getTim(),
                 HardWareUtils.getInstance()
                         .getLocalTimeByHardWareTimeStamp(
                                 Integer.parseInt(siteMap.get("timezone")),
-                                requestDto.getTim()));
+                                requestDto.getTim()),
+                ((float) (currentTimeStamp - unLockDto.getStartTimeStamp())) / 1000f);
 
         chargingSiteService.forceUnlockNotify(siteId,requestDto);
     }

@@ -25,7 +25,12 @@ public enum ClientFunctionCodeType {
 
     QuerySiteInfo(0xf002,QuerySiteInfoStrategy.class),//站点设置信息上报
     ConfigureSiteInfo(0xf102,ConfigureSiteInfoRequestStrategy.class),//站点设置返回
-    RestartSite(0xff02,RestartSiteStrategy.class);//重启站点返回
+    RestartSite(0xff02,RestartSiteStrategy.class),//重启站点返回
+    QueryVersionOfComponents(0x1002,QueryVersionOfComponentsStrategy.class),//重启站点返回
+    ExchangeBootLoad(0x1102,ExchangeBootLoadStrategy.class),//重启站点返回
+    QueryLog(0xD001,QueryLogStrategy.class),//查询日志返回
+    OpenOrCloseLog(0xD101,OpenOrCloseLogStrategy.class),//开启或关闭日志
+    ClearLog(0xD201,ClearLogStrategy.class);//清理日志返回
 
     private int value;
     private Class className;

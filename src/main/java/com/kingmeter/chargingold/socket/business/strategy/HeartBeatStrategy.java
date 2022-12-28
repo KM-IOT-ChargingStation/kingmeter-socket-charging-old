@@ -25,11 +25,46 @@ public class HeartBeatStrategy implements RequestStrategy {
 
     @Override
     public void process(RequestBody requestBody, ResponseBody responseBody, ChannelHandlerContext ctx) {
+        dealWithSmallHeartBeat(requestBody, responseBody, ctx);
+    }
 
-        SiteHeartResponseDto responseDto;
+    private void dealWithSmallHeartBeat(RequestBody requestBody, ResponseBody responseBody, ChannelHandlerContext ctx) {
+        JSONObject obj = JSONObject.
+                parseObject(requestBody.getData());
 
-//        log.info("heartbeat source data is {}",requestBody.getData());
+        long siteId = obj.getLong("sid");
 
+        long soc = 0;
+        if (obj.containsKey("soc")) {
+            soc = obj.getInteger("soc");
+        }
+        if (obj.containsKey("state") && obj.getString("state").length() > 5) {
+            log.info(new KingMeterMarker("Socket,HeartBeat,C301"),
+                    "{}|{}|{}", siteId,
+                    soc, obj.getString("state"));
+            SiteHeartRequestDto requestDto =
+                    JSONObject.
+                            parseObject(requestBody.getData(), SiteHeartRequestDto.class);
+            chargingSiteService.heartBeatNotify(requestDto, responseBody, ctx);
+        } else {
+            log.info(new KingMeterMarker("Socket,HeartBeat,C301"),
+                    "{}|{}|{}", siteId,
+                    soc, "[]");
+        }
+
+
+        SiteHeartResponseDto responseDto = new SiteHeartResponseDto(System.currentTimeMillis() / 1000l + 8 * 3600,
+                -1);
+        sendHeartBeatResponse(responseBody, ctx, responseDto);
+
+        log.info(new KingMeterMarker("Socket,HeartBeat,C302"),
+                "{}|{}|{}|{}", siteId, 0, 0, responseDto.getTim());
+
+
+    }
+
+
+    private void dealWithBigHeartBeat(RequestBody requestBody, ResponseBody responseBody, ChannelHandlerContext ctx) {
         SiteHeartRequestDto requestDto =
                 JSONObject.
                         parseObject(requestBody.getData(), SiteHeartRequestDto.class);
@@ -38,12 +73,12 @@ public class HeartBeatStrategy implements RequestStrategy {
 
         //log记录放在了createSiteHeartResponseDto方法中
         //主要是为了计算 温度
-        responseDto = chargingSiteService.createSiteHeartResponseDto(requestDto);
+        SiteHeartResponseDto responseDto = chargingSiteService.createSiteHeartResponseDto(requestDto);
 
         sendHeartBeatResponse(responseBody, ctx, responseDto);
 
         log.info(new KingMeterMarker("Socket,HeartBeat,C302"),
-                "{}|{}|{}|{}", siteId, 0,0, responseDto.getTim());
+                "{}|{}|{}|{}", siteId, 0, 0, responseDto.getTim());
 
         chargingSiteService.heartBeatNotify(requestDto, responseBody, ctx);
     }

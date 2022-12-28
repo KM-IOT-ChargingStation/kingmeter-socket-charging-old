@@ -10,6 +10,7 @@ import com.kingmeter.socket.framework.dto.ResponseBody;
 import com.kingmeter.socket.framework.strategy.RequestStrategy;
 import com.kingmeter.socket.framework.util.CacheUtil;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.util.concurrent.Promise;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -35,12 +36,17 @@ public class RestartSiteStrategy implements RequestStrategy {
                 "{}|{}",siteId,
                 JSONObject.toJSONString(requestDto));
 
-        Map<String, String> result = new HashMap<>();
-        result.put("siteInfo",
-                JSON.toJSONString(requestDto));
+//        Map<String, String> result = new HashMap<>();
+//        result.put("siteInfo",
+//                JSON.toJSONString(requestDto));
 
         String key = "restart_site_reply_" + siteId;
 
-        CacheUtil.getInstance().getDeviceResultMap().put(key,result);
+        Promise<Object> promise = CacheUtil.getInstance().getPROMISES().remove(key);
+        if (promise != null) {
+            promise.setSuccess(requestDto);
+        }
+
+//        CacheUtil.getInstance().getDeviceResultMap().put(key,result);
     }
 }
