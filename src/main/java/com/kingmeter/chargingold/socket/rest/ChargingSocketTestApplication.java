@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSON;
 import com.kingmeter.chargingold.socket.business.code.ServerFunctionCodeType;
 import com.kingmeter.common.KingMeterMarker;
 import com.kingmeter.dto.charging.v1.rest.response.ForceUnLockResponseRestDto;
+import com.kingmeter.dto.charging.v1.socket.out.ScanUnlockResponseDto;
 import com.kingmeter.dto.charging.v2.socket.in.vo.DockStateInfoFromHeartBeatVO;
 import com.kingmeter.dto.charging.v2.socket.out.ForceUnLockResponseDto;
 import com.kingmeter.socket.framework.application.SocketApplication;
@@ -40,88 +41,83 @@ public class ChargingSocketTestApplication {
 
         TestMemoryCache.getInstance().getUnlockFlag().put(siteId, true);
 
-        new Thread(new TestUnlockPerTime(siteId, times, perSite, perDock)).start();
+        Map<String, String> siteMap = CacheUtil.getInstance().getDeviceInfoMap().get(
+                siteId
+        );
+        int timezone = Integer.parseInt(siteMap.get("timezone"));
+        List<DockStateInfoFromHeartBeatVO> stateList = JSON.parseArray(siteMap.get("dockArray"), DockStateInfoFromHeartBeatVO.class);
+
+
+        new Thread(new TestUnlockPerTime(siteId, times, perSite, perDock,stateList,timezone)).start();
 
         return "batch unlock succeed";
     }
 
 
-    public void stopCheckDockLock(long siteId) {
-        TestMemoryCache.getInstance().getCheckLockFlag().remove(siteId);
-    }
-
-    public String batchCheckDockLock(long siteId, int times,
-                                     long perSite, long perDock) {
-        TestMemoryCache.getInstance().getCheckLockFlag().put(siteId, true);
-
-        new Thread(new TestCheckDockLockPerTime(siteId, times, perSite, perDock)).start();
-
-        return "batch check dock lock succeed";
-    }
-
-    class TestCheckDockLockPerTime implements Runnable {
+    class TestUnlockPerTime implements Runnable {
 
         private long siteId;
         private int times;
         private long perSite;
         private long perDock;
+        private List<DockStateInfoFromHeartBeatVO> stateList;
+        private int timezone;
 
-        public TestCheckDockLockPerTime(long siteId, int times,
-                                        long perSite, long perDock) {
+        public TestUnlockPerTime(long siteId, int times,
+                                 long perSite, long perDock,
+                                 List<DockStateInfoFromHeartBeatVO> stateList,
+                                 int timezone) {
             this.siteId = siteId;
             this.times = times;
             this.perSite = perSite;
             this.perDock = perDock;
+            this.stateList = stateList;
+            this.timezone = timezone;
         }
 
         public void run() {
             for (int i = 0; i < times; i++) {
-                if (TestMemoryCache.getInstance().getCheckLockFlag().containsKey(siteId) &&
-                        TestMemoryCache.getInstance().getCheckLockFlag().get(siteId)) {
-                    Map<String, String> siteMap = CacheUtil.getInstance().getDeviceInfoMap().get(
-                            siteId
-                    );
-                    List<DockStateInfoFromHeartBeatVO> stateList = JSON.parseArray(siteMap.get("dockArray"), DockStateInfoFromHeartBeatVO.class);
-
-                    boolean flag = checkDockLockSingle(siteId, stateList, perDock);
-                    if (!flag) {
-                        TestMemoryCache.getInstance().getCheckLockFlag().remove(siteId);
-                        break;
-                    }
-                    try {
-                        Thread.sleep(perSite);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                } else {
+                boolean flag = scanUnlockSingle(siteId, timezone,stateList, perDock);
+                if (!flag) {
+                    TestMemoryCache.getInstance().getUnlockFlag().remove(siteId);
                     break;
+                }
+                try {
+                    Thread.sleep(perSite);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         }
     }
 
-    private boolean checkDockLockSingle(long siteId, List<DockStateInfoFromHeartBeatVO> stateList, long perDock) {
+    private boolean scanUnlockSingle(long siteId,int timezone, List<DockStateInfoFromHeartBeatVO> stateList, long perDock) {
         try {
             String userId = "123";
 
-            Map<String, String> siteMap = CacheUtil.getInstance().getDeviceInfoMap().get(
-                    siteId
-            );
-
-            int timezone = Integer.parseInt(siteMap.get("timezone"));
-
             for (DockStateInfoFromHeartBeatVO vo : stateList) {
-                ForceUnLockResponseDto response = new
-                        ForceUnLockResponseDto(vo.getKid(), userId,
+                long dockId = vo.getKid();
+                ScanUnlockResponseDto response = new
+                        ScanUnlockResponseDto(vo.getKid(), userId, 0,
                         HardWareUtils.getInstance().getUtcTimeStampOnDevice(timezone));
 
-                socketApplication.sendSocketMsg(siteId,
-                        ServerFunctionCodeType.CheckDockLockStatus,
+                String key = "scan_" + userId + "_" + dockId;
+
+                TestUnLockDto unLockDto = new TestUnLockDto();
+                unLockDto.setSiteId(siteId);
+                unLockDto.setDockId(vo.getKid());
+                unLockDto.setStartTimeStamp(System.currentTimeMillis());
+                TestMemoryCache.getInstance().getTestForceLockInfoMap().put(vo.getKid(),unLockDto);
+
+                SocketChannel channel = socketApplication.sendSocketMsg(siteId,
+                        ServerFunctionCodeType.ScanUnLock,
                         toJSON(response).toString());
 
-                log.info(new KingMeterMarker("Socket,CheckDockLockStatus,C702"),
-                        "{}|{}|{}",
-                        siteId, vo.getKid(), userId);
+                log.info(new KingMeterMarker("Socket,ScanUnLock,C102"),
+                        "{}|{}|{}|{}|{}", siteId, dockId, userId, 0,
+                        HardWareUtils.getInstance().getUtcTimeStampOnDevice(timezone));
+
+                socketApplication.waitForPromiseResult(key, channel);
 
                 try {
                     Thread.sleep(perDock);
@@ -137,56 +133,9 @@ public class ChargingSocketTestApplication {
     }
 
 
-    class TestUnlockPerTime implements Runnable {
-
-        private long siteId;
-        private int times;
-        private long perSite;
-        private long perDock;
-
-        public TestUnlockPerTime(long siteId, int times,
-                                 long perSite, long perDock) {
-            this.siteId = siteId;
-            this.times = times;
-            this.perSite = perSite;
-            this.perDock = perDock;
-        }
-
-        public void run() {
-            for (int i = 0; i < times; i++) {
-                if (TestMemoryCache.getInstance().getUnlockFlag().containsKey(siteId) &&
-                        TestMemoryCache.getInstance().getUnlockFlag().get(siteId)) {
-                    Map<String, String> siteMap = CacheUtil.getInstance().getDeviceInfoMap().get(
-                            siteId
-                    );
-                    List<DockStateInfoFromHeartBeatVO> stateList = JSON.parseArray(siteMap.get("dockArray"), DockStateInfoFromHeartBeatVO.class);
-
-                    boolean flag = unlockSingle(siteId, stateList, perDock);
-                    if (!flag) {
-                        TestMemoryCache.getInstance().getUnlockFlag().remove(siteId);
-                        break;
-                    }
-                    try {
-                        Thread.sleep(perSite);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    break;
-                }
-            }
-        }
-    }
-
-    private boolean unlockSingle(long siteId, List<DockStateInfoFromHeartBeatVO> stateList, long perDock) {
+    private boolean forceUnlockSingle(long siteId,int timezone, List<DockStateInfoFromHeartBeatVO> stateList, long perDock) {
         try {
             String userId = "123";
-
-            Map<String, String> siteMap = CacheUtil.getInstance().getDeviceInfoMap().get(
-                    siteId
-            );
-
-            int timezone = Integer.parseInt(siteMap.get("timezone"));
 
             for (DockStateInfoFromHeartBeatVO vo : stateList) {
                 ForceUnLockResponseDto response = new

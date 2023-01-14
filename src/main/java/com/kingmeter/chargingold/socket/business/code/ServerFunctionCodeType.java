@@ -7,8 +7,10 @@ public interface ServerFunctionCodeType {
     byte[] LoginType = {(byte) 192, (byte) 2};//("C0 02"),//登录返回
     byte[] ScanUnLock = {(byte) 193, (byte) 2};//("C1 02"),//扫码开桩取车
     byte[] ForceUnLock = {(byte) 193, (byte) 4};//("C1 04"),//强制开锁
+    byte[] ScanUnLockConfirm = {(byte) 193, (byte) 5};//("C1 05"),//扫码开桩取车确认
     byte[] BikeInDock = {(byte) 194, (byte) 2};//("C2 02"),//车辆入桩
-    byte[] SiteHeartBeat = {(byte) 195, (byte) 2};//("C3 02"),//站点心跳
+    byte[] SiteHeartBeatBig = {(byte) 195, (byte) 2};//("C3 02"),//站点心跳 大包
+    byte[] SiteHeartBeatSmall = {(byte) 195, (byte) 4};//("C3 04"),//站点心跳 小包
     byte[] SwingCardUnLock = {(byte) 196, (byte) 2};//("C4 02"),//刷卡租车应答
     byte[] SwingCardConfirm = {(byte) 196, (byte) 4};//("C4 04"),//刷卡开桩请求确认
     byte[] QueryDockInfo = {(byte) 198, (byte) 2};//("C6 02"),//查询桩体信息

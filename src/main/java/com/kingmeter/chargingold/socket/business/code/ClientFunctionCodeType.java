@@ -16,7 +16,8 @@ public enum ClientFunctionCodeType {
     ScanUnLock(0xc101, ScanUnLockStrategy.class),//扫码开桩取车
     ForceUnLock(0xc103, ForceUnLockStrategy.class),//强制开锁
     BikeInDock(0xc201, BikeInDockStrategy.class),//车辆入桩
-    SiteHeartBeat(0xc301,HeartBeatStrategy.class),//站点心跳
+    SiteHeartBeat(0xc301,HeartBeatStrategy.class),//站点心跳 大包
+    SiteHeartBeatSmall(0xc303,HeartBeatSmallStrategy.class),//站点心跳 小包
     SwingCardUnLock(0xc401,SwingCardUnLockStrategy.class),//刷卡开桩取车
     SwingCardConfirm(0xc403,SwingCardConfirmStrategy.class),//刷卡开桩请求确认
     QueryDockInfo(0xc601, QueryDockInfoStrategy.class),//查询桩体信息

@@ -2,8 +2,12 @@ package com.kingmeter.chargingold.socket.business.strategy;
 
 import com.alibaba.fastjson.JSONObject;
 import com.kingmeter.chargingold.socket.acl.ChargingSiteService;
+import com.kingmeter.chargingold.socket.business.code.ServerFunctionCodeType;
+import com.kingmeter.chargingold.socket.rest.TestMemoryCache;
+import com.kingmeter.chargingold.socket.rest.TestUnLockDto;
 import com.kingmeter.common.KingMeterMarker;
 import com.kingmeter.dto.charging.v1.socket.in.ScanUnLockRequestDto;
+import com.kingmeter.dto.charging.v1.socket.out.ScanUnLockConfirmResponseDto;
 import com.kingmeter.socket.framework.dto.RequestBody;
 import com.kingmeter.socket.framework.dto.ResponseBody;
 import com.kingmeter.socket.framework.strategy.RequestStrategy;
@@ -24,7 +28,7 @@ public class ScanUnLockStrategy implements RequestStrategy {
     private ChargingSiteService chargingSiteService;
 
     @Override
-    public void process(RequestBody requestBody, ResponseBody responseBody, ChannelHandlerContext channelHandlerContext) {
+    public void process(RequestBody requestBody, ResponseBody responseBody, ChannelHandlerContext ctx) {
         ScanUnLockRequestDto requestDto =
                 JSONObject.
                         parseObject(requestBody.getData(), ScanUnLockRequestDto.class);
@@ -33,15 +37,35 @@ public class ScanUnLockStrategy implements RequestStrategy {
 
         Map<String, String> siteMap = CacheUtil.getInstance().getDeviceInfoMap().get(siteId);
 
+        TestUnLockDto unLockDto = TestMemoryCache.getInstance().getTestForceLockInfoMap().get(
+                requestDto.getKid()
+        );
+        long currentTimeStamp = System.currentTimeMillis();
+        if(unLockDto == null){
+            unLockDto = new TestUnLockDto();
+            unLockDto.setStartTimeStamp(currentTimeStamp);
+        }
+
         log.info(new KingMeterMarker("Socket,ScanUnLock,C101"),
-                "{}|{}|{}|{}|{}|{}|{}|0",
+                "{}|{}|{}|{}|{}|{}|{}|{}",
                 siteId,requestDto.getKid(),
                 requestDto.getBid(),requestDto.getUid(),requestDto.getGbs(),
                 requestDto.getTim(),
                 HardWareUtils.getInstance()
                         .getLocalTimeByHardWareTimeStamp(
                                 Integer.parseInt(siteMap.get("timezone")),
-                                requestDto.getTim()));
+                                requestDto.getTim()),
+                ((float) (currentTimeStamp - unLockDto.getStartTimeStamp())) / 1000f);
+
+        ScanUnLockConfirmResponseDto responseDto =
+                new ScanUnLockConfirmResponseDto(requestDto.getKid());
+        responseBody.setFunctionCodeArray(ServerFunctionCodeType.ScanUnLockConfirm);
+        responseBody.setData(JSONObject.toJSON(responseDto).toString());
+        ctx.writeAndFlush(responseBody);
+
+        log.info(new KingMeterMarker("Socket,ScanUnLock,C105"),
+                "{}|{}", siteId, responseDto.getKid());
+
 
         //这里要调用扫码租车后续业务逻辑操作
         chargingSiteService.dealWithScanUnLock(siteId,requestDto);

@@ -278,7 +278,6 @@ public class ChargingSiteService {
                 .getDeviceInfoMap()
                 .getOrDefault(siteId, new ConcurrentHashMap<>());
 
-
         if (state != null && state.length > 0) {
             siteMap.put("dockArray", JSON.toJSONString(state));
         }

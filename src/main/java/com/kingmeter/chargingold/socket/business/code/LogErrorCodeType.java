@@ -23,7 +23,8 @@ public enum LogErrorCodeType {
     NetDisconnectCount(11,"HeartBeat get response until sending %s times"),
     PowerResetCard(12,"Power Reset card cause reboot"),
     CannotConnectServer(13,"Cannot connect to server"),
-    CannotSendDataToServer(14,"Cannot send data to server");
+    CannotSendDataToServer(14,"Cannot send data to server"),
+    DataJsonFormatError(15,"Data Json format error");
 
 
     private int code;

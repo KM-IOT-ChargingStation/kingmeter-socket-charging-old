@@ -60,7 +60,6 @@ public class HeartBeatStrategy implements RequestStrategy {
         log.info(new KingMeterMarker("Socket,HeartBeat,C302"),
                 "{}|{}|{}|{}", siteId, 0, 0, responseDto.getTim());
 
-
     }
 
 
@@ -85,7 +84,7 @@ public class HeartBeatStrategy implements RequestStrategy {
 
     private void sendHeartBeatResponse(ResponseBody responseBody, ChannelHandlerContext ctx,
                                        SiteHeartResponseDto responseDto) {
-        responseBody.setFunctionCodeArray(ServerFunctionCodeType.SiteHeartBeat);
+        responseBody.setFunctionCodeArray(ServerFunctionCodeType.SiteHeartBeatBig);
         responseBody.setData(JSONObject.toJSON(responseDto).toString());
         ctx.writeAndFlush(responseBody);
     }
