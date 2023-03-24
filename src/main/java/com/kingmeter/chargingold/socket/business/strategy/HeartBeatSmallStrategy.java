@@ -30,10 +30,13 @@ public class HeartBeatSmallStrategy implements RequestStrategy {
                 parseObject(requestBody.getData());
 
         long siteId = obj.getLong("sid");
-//        long sn = obj.getLong("sn");
+        long sn = 0;
+        if(obj.containsKey("sn")){
+            sn = obj.getLong("sn");
+        }
 
         log.info(new KingMeterMarker("Socket,HeartBeat,C303"),
-                "{}|{}", siteId,0);
+                "{}|{}", siteId,sn);
 
         SiteHeartResponseDto responseDto = new SiteHeartResponseDto(System.currentTimeMillis() / 1000l + 8 * 3600,
                 -1);
@@ -43,6 +46,8 @@ public class HeartBeatSmallStrategy implements RequestStrategy {
 
         log.info(new KingMeterMarker("Socket,HeartBeat,C304"),
                 "{}|{}", siteId, responseDto.getTim());
+
+        responseDto = null;
 
     }
 

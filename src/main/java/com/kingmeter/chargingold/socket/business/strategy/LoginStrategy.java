@@ -63,6 +63,10 @@ public class LoginStrategy implements RequestStrategy {
                 HardWareUtils.getInstance()
                         .getUtcTimeStampOnDevice(timezone));
 
+        log.warn(new KingMeterMarker("Socket,Login,C001"),
+                "{}|{}|{}|{}", siteId, ctx.channel().id().asLongText(), "0",
+                channel.remoteAddress());
+
         if (!tokenResult.isReLogin()) {
             log.info(new KingMeterMarker("Socket,Login,C001"),
                     "{}|{}|{}|{}", siteId,
@@ -76,31 +80,21 @@ public class LoginStrategy implements RequestStrategy {
             responseDto = permission.getResponseDto();
             companyCode = permission.getCompanyCode();
             timezone = permission.getTimezone();
-
-            log.info(new KingMeterMarker("Socket,Login,C002"),
-                    "{}|{}|{}|{}|{}|{}|{}|{}|{}|{}", siteId,
-                    responseDto.getSls(), responseDto.getPwd(),
-                    responseDto.getUrl(), responseDto.getPot(),
-                    0, 0, Integer.parseInt(companyCode), responseDto.getTim(),
-                    HardWareUtils.getInstance()
-                            .getLocalTimeByHardWareTimeStamp(
-                                    timezone,
-                                    responseDto.getTim()));
         } else {
-            log.warn(new KingMeterMarker("Socket,Login,C001"),
+            log.info(new KingMeterMarker("Socket,Login,C001"),
                     "{}|{}|{}|{}", siteId,
-                    loginParamsDto.getPwd(), "0", "");
+                    loginParamsDto.getPwd(), "2", "");
 
-            log.warn(new KingMeterMarker("Socket,Login,C002"),
-                    "{}|{}|{}|{}|{}|{}|{}|{}|{}|{}", siteId,
-                    responseDto.getSls(), responseDto.getPwd(),
-                    responseDto.getUrl(), responseDto.getPot(),
-                    0, 0, Integer.parseInt(companyCode), responseDto.getTim(),
-                    HardWareUtils.getInstance()
-                            .getLocalTimeByHardWareTimeStamp(
-                                    timezone,
-                                    responseDto.getTim()));
         }
+        log.info(new KingMeterMarker("Socket,Login,C002"),
+                "{}|{}|{}|{}|{}|{}|{}|{}|{}|{}", siteId,
+                responseDto.getSls(), responseDto.getPwd(),
+                responseDto.getUrl(), responseDto.getPot(),
+                0, 0, Integer.parseInt(companyCode), responseDto.getTim(),
+                HardWareUtils.getInstance()
+                        .getLocalTimeByHardWareTimeStamp(
+                                timezone,
+                                responseDto.getTim()));
 
         //包装传出data
         responseBody.setTokenArray(tokenResult.getTokenArray());

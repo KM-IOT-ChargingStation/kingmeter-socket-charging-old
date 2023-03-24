@@ -127,7 +127,7 @@ public class ChargingSiteService {
         CacheUtil.getInstance().getDeviceInfoMap().put(siteId, siteMap);
         CacheUtil.getInstance().dealWithLoginSucceed(String.valueOf(siteId),
                 tokenResult.getToken(), tokenResult.getTokenArray(), channel);
-        CacheUtil.getInstance().getDeviceResultMap().put(siteId + "_queryDockInfoFlag", new HashMap<>());
+//        CacheUtil.getInstance().getDeviceResultMap().put(siteId + "_queryDockInfoFlag", new HashMap<>());
 
         return new LoginPermissionDto(responseDto, companyCode, timezone);
     }
@@ -312,6 +312,8 @@ public class ChargingSiteService {
         }
 
         if (requestBusiness) business.heartBeatNotify(requestDto);
+        state = null;
+        requestDto = null;
     }
 
     public SwingCardUnLockResponseDto dealWithSwingCardUnlock(long siteId, SwingCardUnLockRequestDto requestDto) {

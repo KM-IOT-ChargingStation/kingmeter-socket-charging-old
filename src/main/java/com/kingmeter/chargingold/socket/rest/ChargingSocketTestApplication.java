@@ -11,6 +11,7 @@ import com.kingmeter.dto.charging.v2.socket.out.ForceUnLockResponseDto;
 import com.kingmeter.socket.framework.application.SocketApplication;
 import com.kingmeter.socket.framework.util.CacheUtil;
 import com.kingmeter.utils.HardWareUtils;
+import com.kingmeter.utils.StringUtil;
 import io.netty.channel.Channel;
 import io.netty.channel.socket.SocketChannel;
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +49,7 @@ public class ChargingSocketTestApplication {
         List<DockStateInfoFromHeartBeatVO> stateList = JSON.parseArray(siteMap.get("dockArray"), DockStateInfoFromHeartBeatVO.class);
 
 
-        new Thread(new TestUnlockPerTime(siteId, times, perSite, perDock,stateList,timezone)).start();
+        new Thread(new TestUnlockPerTime(siteId, times, perSite, perDock, stateList, timezone)).start();
 
         return "batch unlock succeed";
     }
@@ -77,7 +78,37 @@ public class ChargingSocketTestApplication {
 
         public void run() {
             for (int i = 0; i < times; i++) {
-                boolean flag = scanUnlockSingle(siteId, timezone,stateList, perDock);
+                boolean flag = TestMemoryCache.getInstance().getUnlockFlag()
+                        .getOrDefault(siteId, false);
+                if (!flag) {
+                    TestMemoryCache.getInstance().getUnlockFlag().remove(siteId);
+                    break;
+                }
+                Map<String, String> siteMap = CacheUtil.getInstance().getDeviceInfoMap().get(
+                        siteId
+                );
+                boolean isDockReadyNow = true;
+                String dockArrayStr = siteMap.getOrDefault("dockArray", "");
+                if (StringUtil.isNotEmpty(dockArrayStr)) {
+                    List<DockStateInfoFromHeartBeatVO> stateList =
+                            JSON.parseArray(dockArrayStr, DockStateInfoFromHeartBeatVO.class);
+                    for (DockStateInfoFromHeartBeatVO vo : stateList) {
+                        if (vo.getBid() == 0) {
+                            isDockReadyNow = false;
+                            break;
+                        }
+                    }
+                }
+                if (!isDockReadyNow) {
+                    try {
+                        Thread.sleep(perSite);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    continue;
+                }
+
+                flag = scanUnlockSingle(siteId, timezone, stateList, perDock);
                 if (!flag) {
                     TestMemoryCache.getInstance().getUnlockFlag().remove(siteId);
                     break;
@@ -91,7 +122,7 @@ public class ChargingSocketTestApplication {
         }
     }
 
-    private boolean scanUnlockSingle(long siteId,int timezone, List<DockStateInfoFromHeartBeatVO> stateList, long perDock) {
+    private boolean scanUnlockSingle(long siteId, int timezone, List<DockStateInfoFromHeartBeatVO> stateList, long perDock) {
         try {
             String userId = "123";
 
@@ -107,7 +138,7 @@ public class ChargingSocketTestApplication {
                 unLockDto.setSiteId(siteId);
                 unLockDto.setDockId(vo.getKid());
                 unLockDto.setStartTimeStamp(System.currentTimeMillis());
-                TestMemoryCache.getInstance().getTestForceLockInfoMap().put(vo.getKid(),unLockDto);
+                TestMemoryCache.getInstance().getTestForceLockInfoMap().put(vo.getKid(), unLockDto);
 
                 SocketChannel channel = socketApplication.sendSocketMsg(siteId,
                         ServerFunctionCodeType.ScanUnLock,
@@ -133,7 +164,7 @@ public class ChargingSocketTestApplication {
     }
 
 
-    private boolean forceUnlockSingle(long siteId,int timezone, List<DockStateInfoFromHeartBeatVO> stateList, long perDock) {
+    private boolean forceUnlockSingle(long siteId, int timezone, List<DockStateInfoFromHeartBeatVO> stateList, long perDock) {
         try {
             String userId = "123";
 
@@ -148,7 +179,7 @@ public class ChargingSocketTestApplication {
                 unLockDto.setSiteId(siteId);
                 unLockDto.setDockId(vo.getKid());
                 unLockDto.setStartTimeStamp(System.currentTimeMillis());
-                TestMemoryCache.getInstance().getTestForceLockInfoMap().put(vo.getKid(),unLockDto);
+                TestMemoryCache.getInstance().getTestForceLockInfoMap().put(vo.getKid(), unLockDto);
 
                 SocketChannel channel = socketApplication.sendSocketMsg(siteId,
                         ServerFunctionCodeType.ForceUnLock,

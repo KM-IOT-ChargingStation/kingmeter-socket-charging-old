@@ -38,18 +38,21 @@ public class HeartBeatStrategy implements RequestStrategy {
         if (obj.containsKey("soc")) {
             soc = obj.getInteger("soc");
         }
+        log.info(new KingMeterMarker("Socket,HeartBeat,C301"),
+                "{}|{}|{}", siteId,
+                soc, "[]");
         if (obj.containsKey("state") && obj.getString("state").length() > 5) {
-            log.info(new KingMeterMarker("Socket,HeartBeat,C301"),
-                    "{}|{}|{}", siteId,
-                    soc, obj.getString("state"));
+//            log.info(new KingMeterMarker("Socket,HeartBeat,C301"),
+//                    "{}|{}|{}", siteId,
+//                    soc, obj.getString("state"));
             SiteHeartRequestDto requestDto =
                     JSONObject.
                             parseObject(requestBody.getData(), SiteHeartRequestDto.class);
             chargingSiteService.heartBeatNotify(requestDto, responseBody, ctx);
         } else {
-            log.info(new KingMeterMarker("Socket,HeartBeat,C301"),
-                    "{}|{}|{}", siteId,
-                    soc, "[]");
+//            log.info(new KingMeterMarker("Socket,HeartBeat,C301"),
+//                    "{}|{}|{}", siteId,
+//                    soc, "[]");
         }
 
 
@@ -57,8 +60,8 @@ public class HeartBeatStrategy implements RequestStrategy {
                 -1);
         sendHeartBeatResponse(responseBody, ctx, responseDto);
 
-        log.info(new KingMeterMarker("Socket,HeartBeat,C302"),
-                "{}|{}|{}|{}", siteId, 0, 0, responseDto.getTim());
+//        log.info(new KingMeterMarker("Socket,HeartBeat,C302"),
+//                "{}|{}|{}|{}", siteId, 0, 0, responseDto.getTim());
 
     }
 
@@ -87,6 +90,7 @@ public class HeartBeatStrategy implements RequestStrategy {
         responseBody.setFunctionCodeArray(ServerFunctionCodeType.SiteHeartBeatBig);
         responseBody.setData(JSONObject.toJSON(responseDto).toString());
         ctx.writeAndFlush(responseBody);
+        responseDto = null;
     }
 
 }

@@ -12,12 +12,12 @@ import java.util.concurrent.ConcurrentMap;
 @Data
 public class TestMemoryCache {
 
-    private volatile static TestMemoryCache instance;
+    private static TestMemoryCache instance;
 
     private TestMemoryCache() {
     }
 
-    public static TestMemoryCache getInstance() {
+    public static synchronized TestMemoryCache getInstance() {
         if (instance == null) {
             synchronized (TestMemoryCache.class) {
                 if (instance == null) {
@@ -28,7 +28,7 @@ public class TestMemoryCache {
         return instance;
     }
 
-    public volatile Map<Long, Boolean> unlockFlag = Collections.synchronizedMap(new HashMap());
-    public volatile Map<Long, Boolean> checkLockFlag = Collections.synchronizedMap(new HashMap());
-    public volatile ConcurrentMap<Long, TestUnLockDto> testForceLockInfoMap = new ConcurrentHashMap<>();
+    public  Map<Long, Boolean> unlockFlag = Collections.synchronizedMap(new HashMap());
+    public  Map<Long, Boolean> checkLockFlag = Collections.synchronizedMap(new HashMap());
+    public  ConcurrentMap<Long, TestUnLockDto> testForceLockInfoMap = new ConcurrentHashMap<>();
 }
