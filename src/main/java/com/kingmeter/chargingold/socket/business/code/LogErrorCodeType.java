@@ -20,7 +20,7 @@ public enum LogErrorCodeType {
     ReLoginFailed(8,"ReLogin failed"),
     ReLoginFailed6Times(9,"ReLogin 6 times failed"),
     NetRecover(10,"Network recover"),
-    NetDisconnectCount(11,"HeartBeat get response until sending %s times"),
+    NetDisconnectCount(11,"HeartBeat get response until sending n times : %s"),
     PowerResetCard(12,"Power Reset card cause reboot"),
     CannotConnectServer(13,"Cannot connect to server"),
     CannotSendDataToServer(14,"Cannot send data to server"),

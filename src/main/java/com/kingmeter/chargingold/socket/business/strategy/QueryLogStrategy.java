@@ -60,7 +60,6 @@ public class QueryLogStrategy implements RequestStrategy {
 
     private static List<Map<String, String>> decodeRecord(String record) {
         List<Map<String, String>> result = new ArrayList<>();
-//        DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         if (record != null && !record.equals("")) {
             String[] rowArray = record.split(";");
             for (String tmp : rowArray) {

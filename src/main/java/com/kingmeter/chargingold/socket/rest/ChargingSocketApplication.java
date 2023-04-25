@@ -1,7 +1,6 @@
 package com.kingmeter.chargingold.socket.rest;
 
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.kingmeter.chargingold.socket.business.code.ServerFunctionCodeType;
 import com.kingmeter.common.KingMeterException;
@@ -16,11 +15,9 @@ import com.kingmeter.socket.framework.dto.ResponseBody;
 import com.kingmeter.socket.framework.util.CacheUtil;
 import com.kingmeter.utils.HardWareUtils;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.util.concurrent.DefaultPromise;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +33,7 @@ public class ChargingSocketApplication {
     private SocketApplication socketApplication;
 
     /**
-     * 扫码租车
+     * 扫码租车1代
      *
      * @param restDto
      */
@@ -62,11 +59,36 @@ public class ChargingSocketApplication {
         String key = "scan_" + userId + "_" + dockId;
 
         return (ScanUnlockResponseRestDto) socketApplication.waitForPromiseResult(key, channel);
+    }
 
-//        CacheUtil.getInstance().getDeviceResultMap().remove(key);
-//        //4,wait for lock response
-//        Map<String, String> result = socketApplication.waitForMapResult(key);
-//        return JSON.parseObject(result.get("ScanUnlock"), ScanUnlockResponseRestDto.class);
+    /**
+     * 扫码租车2代
+     *
+     * @param restDto
+     */
+    public ScanUnlockIIResponseRestDto scanUnlockII(ScanUnlockIIRequestRestDto restDto) {
+        long siteId = restDto.getSiteId();
+        long dockId = restDto.getDockId();
+        String userId = restDto.getUserId();
+
+        int timezone = getTimezone(siteId);
+
+        ScanUnlockIIResponseDto response = new
+                ScanUnlockIIResponseDto(dockId, userId, restDto.getMinbsoc(),
+                restDto.getTimeout(),
+                HardWareUtils.getInstance().getUtcTimeStampOnDevice(timezone));
+
+        SocketChannel channel = socketApplication.sendSocketMsg(siteId,
+                ServerFunctionCodeType.ScanUnLockII,
+                toJSON(response).toString());
+
+        log.info(new KingMeterMarker("Socket,ScanUnLockII,C106"),
+                "{}|{}|{}|{}|{}|{}", siteId, dockId, userId, restDto.getMinbsoc(),restDto.getTimeout(),
+                HardWareUtils.getInstance().getUtcTimeStampOnDevice(timezone));
+
+        String key = "scan_II_" + userId + "_" + dockId;
+
+        return (ScanUnlockIIResponseRestDto) socketApplication.waitForPromiseResult(key, channel);
     }
 
     /**
@@ -86,17 +108,38 @@ public class ChargingSocketApplication {
                 userId, 0);
 
         String key = "force_" + dockId;
-//        CacheUtil.getInstance().getDeviceResultMap().remove(key);
-
         SocketChannel channel = socketApplication.sendSocketMsg(siteId,
                 ServerFunctionCodeType.ForceUnLock,
                 JSONObject.toJSON(responseDto).toString());
 
         return (ForceUnLockResponseRestDto)socketApplication.waitForPromiseResult(key, channel);
+    }
 
-//        //4,wait for lock response
-//        Map<String, String> result = socketApplication.waitForMapResult(key);
-//        return JSON.parseObject(result.get("ForceUnlock"), ForceUnLockResponseRestDto.class);
+    /**
+     * 远程锁车
+     *
+     * @param restDto
+     */
+    public RemoteLockResponseRestDto remoteLock(RemoteLockRequestRestDto restDto) {
+        long siteId = restDto.getSiteId();
+        long dockId = restDto.getDockId();
+
+        int timezone = getTimezone(siteId);
+
+        RemoteLockResponseDto response = new
+                RemoteLockResponseDto(dockId);
+
+        SocketChannel channel = socketApplication.sendSocketMsg(siteId,
+                ServerFunctionCodeType.RemoteLock,
+                toJSON(response).toString());
+
+        log.info(new KingMeterMarker("Socket,RemoteLock,C109"),
+                "{}|{}|{}", siteId, dockId,
+                HardWareUtils.getInstance().getUtcTimeStampOnDevice(timezone));
+
+        String key = "remote_lock_" + dockId;
+
+        return (RemoteLockResponseRestDto) socketApplication.waitForPromiseResult(key, channel);
     }
 
     /**

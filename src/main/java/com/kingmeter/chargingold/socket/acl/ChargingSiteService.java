@@ -5,11 +5,8 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.kingmeter.chargingold.socket.business.code.ServerFunctionCodeType;
 import com.kingmeter.common.KingMeterMarker;
-import com.kingmeter.dto.charging.v1.rest.response.ForceUnLockResponseRestDto;
-import com.kingmeter.dto.charging.v1.rest.response.QueryDockLockStatusResponseRestDto;
-import com.kingmeter.dto.charging.v1.rest.response.ScanUnlockResponseRestDto;
+import com.kingmeter.dto.charging.v1.rest.response.*;
 import com.kingmeter.dto.charging.v1.socket.in.*;
-import com.kingmeter.dto.charging.v1.rest.response.QueryDockInfoResponseRestDto;
 import com.kingmeter.dto.charging.v1.rest.response.vo.DockStateInfoFromQueryDockInfoVOForRest;
 import com.kingmeter.dto.charging.v1.socket.in.vo.DockStateInfoFromQueryDockInfoVO;
 import com.kingmeter.dto.charging.v1.socket.in.vo.DockStateInfoFromHeartBeatVO;
@@ -166,19 +163,6 @@ public class ChargingSiteService {
     public void dealWithScanUnLock(long siteId, ScanUnLockRequestDto requestDto) {
         Map<String, String> siteMap = CacheUtil.getInstance().getDeviceInfoMap().get(siteId);
 
-//        Map<String, String> result = new HashMap<>();
-//        result.put("ScanUnlock",
-//                JSON.toJSONString(new ScanUnlockResponseRestDto(siteId,
-//                        requestDto.getKid(), requestDto.getBid(),
-//                        requestDto.getUid(), requestDto.getGbs(),
-//                        HardWareUtils.getInstance()
-//                                .getLocalTimeStampByHardWareUtcTimeStamp(
-//                                        Integer.parseInt(siteMap.get("timezone")),
-//                                        requestDto.getTim()))));
-//
-//        CacheUtil.getInstance().getDeviceResultMap().put(
-//                "scan_" + requestDto.getUid(), result);
-
         String key = "scan_" + requestDto.getUid() + "_" + requestDto.getKid();
         Promise<Object> promise = CacheUtil.getInstance().getPROMISES().remove(key);
         if (promise != null) {
@@ -192,6 +176,42 @@ public class ChargingSiteService {
         }
 
         if (requestBusiness) business.dealWithScanUnLock(requestDto);
+    }
+
+    public void dealWithScanUnLockII(long siteId, ScanUnLockIIRequestDto requestDto) {
+        Map<String, String> siteMap = CacheUtil.getInstance().getDeviceInfoMap().get(siteId);
+
+        String key = "scan_II_" + requestDto.getUid() + "_" + requestDto.getKid();
+        Promise<Object> promise = CacheUtil.getInstance().getPROMISES().remove(key);
+        if (promise != null) {
+            promise.setSuccess(new ScanUnlockIIResponseRestDto(siteId,
+                    requestDto.getKid(), requestDto.getBid(),
+                    requestDto.getUid(), requestDto.getBs(),requestDto.getLs(),
+                    HardWareUtils.getInstance()
+                            .getLocalTimeStampByHardWareUtcTimeStamp(
+                                    Integer.parseInt(siteMap.get("timezone")),
+                                    requestDto.getTim())));
+        }
+
+        if (requestBusiness) business.dealWithScanUnLockII(requestDto);
+    }
+
+    public void dealWithRemoteLock(long siteId, RemoteLockRequestDto requestDto) {
+        Map<String, String> siteMap = CacheUtil.getInstance().getDeviceInfoMap().get(siteId);
+
+        String key = "remote_lock_" + requestDto.getKid();
+        Promise<Object> promise = CacheUtil.getInstance().getPROMISES().remove(key);
+        if (promise != null) {
+            promise.setSuccess(new RemoteLockResponseRestDto(siteId,
+                    requestDto.getKid(), requestDto.getBid(),
+                    requestDto.getBs(), requestDto.getLs(),
+                    HardWareUtils.getInstance()
+                            .getLocalTimeStampByHardWareUtcTimeStamp(
+                                    Integer.parseInt(siteMap.get("timezone")),
+                                    requestDto.getTim())));
+        }
+
+        if (requestBusiness) business.dealWithRemoteLock(requestDto);
     }
 
 

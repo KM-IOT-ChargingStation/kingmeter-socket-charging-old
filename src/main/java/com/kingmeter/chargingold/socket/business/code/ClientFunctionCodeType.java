@@ -31,7 +31,11 @@ public enum ClientFunctionCodeType {
     ExchangeBootLoad(0x1102,ExchangeBootLoadStrategy.class),//重启站点返回
     QueryLog(0xD001,QueryLogStrategy.class),//查询日志返回
     OpenOrCloseLog(0xD101,OpenOrCloseLogStrategy.class),//开启或关闭日志
-    ClearLog(0xD201,ClearLogStrategy.class);//清理日志返回
+    ClearLog(0xD201,ClearLogStrategy.class),//清理日志返回
+
+    ScanUnLockII(0xc107, ScanUnLockIIStrategy.class),//扫码开桩二代
+    RemoteLock(0xc10A, RemoteLockStrategy.class);//扫码开桩取车
+
 
     private int value;
     private Class className;

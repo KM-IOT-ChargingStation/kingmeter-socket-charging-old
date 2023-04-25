@@ -31,4 +31,5 @@ public class TestMemoryCache {
     public  Map<Long, Boolean> unlockFlag = Collections.synchronizedMap(new HashMap());
     public  Map<Long, Boolean> checkLockFlag = Collections.synchronizedMap(new HashMap());
     public  ConcurrentMap<Long, TestUnLockDto> testForceLockInfoMap = new ConcurrentHashMap<>();
+    public  ConcurrentMap<Long, TestRemoteLockDto> testRemoteLockInfoMap = new ConcurrentHashMap<>();
 }

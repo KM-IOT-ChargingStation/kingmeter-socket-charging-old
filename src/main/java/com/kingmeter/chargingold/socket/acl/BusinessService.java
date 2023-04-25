@@ -10,6 +10,10 @@ public interface BusinessService {
 
     void dealWithScanUnLock(ScanUnLockRequestDto requestDto);
 
+    void dealWithScanUnLockII(ScanUnLockIIRequestDto requestDto);
+
+    void dealWithRemoteLock(RemoteLockRequestDto requestDto);
+
     void offlineNotify(Long deviceId);
 
     void forceUnlockNotify(ForceUnLockRequestDto requestDto);

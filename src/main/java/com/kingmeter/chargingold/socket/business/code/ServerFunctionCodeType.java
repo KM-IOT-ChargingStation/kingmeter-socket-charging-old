@@ -26,4 +26,10 @@ public interface ServerFunctionCodeType {
     byte[] QueryLog = {(byte) 208, (byte) 2};//("D0 02"),//查询日志
     byte[] OpenOrCloseLog = {(byte) 209, (byte) 2};//("D1 02"),//开启或关闭日志
     byte[] ClearLog = {(byte) 210, (byte) 2};//("D2 02"),//清空日志
+
+
+    byte[] ScanUnLockII = {(byte) 193, (byte) 6};//("c1 06"),//扫码开锁二代
+    byte[] ScanUnLockIIConfirm = {(byte) 193, (byte) 8};//("c1 08"),//扫码开锁二代确认
+    byte[] RemoteLock = {(byte) 193, (byte) 9};//("C1 09"),//远程关锁
+    byte[] RemoteLockConfirm = {(byte) 193, (byte) 11};//("C1 0B"),//远程关锁确认
 }
